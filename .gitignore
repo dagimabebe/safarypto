@@ -1,0 +1,15 @@
+node_modules/
+.env
+*.log
+.DS_Store
+docker-compose.override.yml
+.nyc_output
+coverage/
+.elasticbeanstalk/
+.terraform/
+.vscode/
+.idea/
+*.tar.gz
+*.zip
+config/local.json
+healthcheck.js
