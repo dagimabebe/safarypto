@@ -1,0 +1,10 @@
+{
+  "INFURA_API_KEY": "your_infura_project_id",
+  "DEPLOYER_PRIVATE_KEY": "your_deployer_private_key",
+  "ETHERSCAN_API_KEY": "your_etherscan_api_key",
+  "CONTRACT_ADDRESSES": {
+    "token": "",
+    "swap": "",
+    "vault": ""
+  }
+}
