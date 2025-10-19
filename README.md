@@ -1,22 +1,37 @@
+
 # Safarypto - Secure Authentication System with MPESA & Crypto Integration
 
-## 🚀 Overview
+## Overview
+Enterprise-grade authentication and financial platform integrating MPESA mobile payments with blockchain cryptocurrency operations. Built for production with security-first architecture.
 
-Safarypto is a production-ready, enterprise-grade authentication system that seamlessly integrates MPESA mobile payments with blockchain cryptocurrency operations. Built with Node.js, MongoDB, Redis, and Docker, it provides a secure, scalable foundation for financial applications.
+##  Features
 
-## 🏗️ Architecture
+### Authentication & Security
+- JWT-based authentication with refresh token rotation
+- Role-based access control (User/Admin)
+- Rate limiting and brute force protection
+- Input validation and sanitization
+- Password strength enforcement
+- Redis session management
 
-```
-safarypto/
-├── config/                 # Configuration files
-├── controllers/           # Business logic
-├── middleware/           # Security & validation
-├── models/              # Database schemas
-├── routes/              # API endpoints
-├── tests/               # Test suites
-├── utils/               # Helper functions
-└── root files           # Docker, package.json, etc.
-```
+### MPESA Integration
+- STK Push for payment initiation
+- C2B transaction processing
+- B2C payouts to users
+- Real-time webhook callbacks
+- Transaction status tracking
+
+### Blockchain Operations
+- Ethereum wallet generation and management
+- ERC20 token operations (SafaryptoToken - SFT)
+- Crypto transfers and balance checking
+- MPESA to crypto swapping
+- Private key encryption (AES-256)
+
+### Smart Contracts
+- **SafaryptoToken**: Custom ERC20 token with minting/burning
+- **SafaryptoSwap**: MPESA to crypto exchange platform
+- **SafaryptoVault**: Staking and rewards system
 
 ## 📋 Prerequisites
 
@@ -25,37 +40,35 @@ safarypto/
 - Redis 7.0+
 - Docker & Docker Compose
 
-## 🛠️ Quick Start
+## 🛠 Installation
 
-### Development
+### Quick Start with Docker
 ```bash
-# Clone and setup
 git clone <repository>
 cd safarypto
-cp .env.example .env
-
-# Start with Docker
 docker-compose up --build
+```
 
-# Or run locally
+### Manual Installation
+```bash
 npm install
+
+# Start services
+docker-compose up mongodb redis -d
+
+# Start application
 npm start
 ```
 
-### Production
-```bash
-docker-compose -f docker-compose.prod.yml up -d
-```
+## ⚙️ Configuration
 
-## ⚙️ Environment Configuration
-
+### Environment Variables
 Create `.env` file:
-
 ```bash
 NODE_ENV=production
 PORT=5000
-MONGODB_URI=mongodb://mongodb:27017/safarypto
-REDIS_URL=redis://redis:6379
+MONGODB_URI=mongodb://localhost:27017/safarypto
+REDIS_URL=redis://localhost:6379
 JWT_ACCESS_SECRET=your_256bit_access_secret_here
 JWT_REFRESH_SECRET=your_256bit_refresh_secret_here
 MPESA_CONSUMER_KEY=your_mpesa_consumer_key
@@ -67,136 +80,63 @@ CONTRACT_ADDRESS=0xYourERC20ContractAddress
 ENCRYPTION_KEY=your_32byte_encryption_key
 ```
 
-## 🗄️ Database Schemas
-
-### User Model
-```javascript
-{
-  email: String (unique, required),
-  phone: String (unique, required),
-  password: String (hashed, required),
-  mpesaCode: String,
-  walletAddress: String,
-  role: ['user', 'admin'],
-  isVerified: Boolean,
-  refreshTokens: Array
-}
+### Smart Contract Deployment
+```bash
+npm run compile
+npm run deploy:sepolia
 ```
 
-### Transaction Model
-```javascript
-{
-  userId: ObjectId (ref: User),
-  type: ['mpesa_deposit', 'crypto_transfer', 'swap_mpesa_crypto'],
-  amount: Number,
-  currency: ['KES', 'ETH', 'USDT'],
-  status: ['pending', 'completed', 'failed'],
-  reference: String (unique),
-  blockchainHash: String,
-  metadata: Object
-}
-```
+## 📡 API Endpoints
 
-### Wallet Model
-```javascript
-{
-  userId: ObjectId (ref: User, unique),
-  publicKey: String (unique),
-  privateKeyEncrypted: String (AES-256),
-  balance: Number,
-  currency: ['ETH', 'USDT']
-}
-```
+### Authentication
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/refresh-token` - Token refresh
+- `POST /api/v1/auth/logout` - User logout
+- `POST /api/v1/auth/verify-phone` - Phone verification
 
-## 🔐 Authentication Flow
-
-### Registration
-1. User provides email, phone, password
-2. Password validated (8+ chars, uppercase, lowercase, number, symbol)
-3. bcrypt hashing with salt rounds: 12
-4. JWT access token (15min) and refresh token (7days) issued
-5. Refresh tokens stored in Redis with rotation
-
-### Security Features
-- Rate limiting: 5 login attempts/15min per IP
-- JWT token blacklisting
-- Input sanitization and validation
-- Helmet.js security headers
-- CORS configured for production
-- XSS and SQL injection protection
-
-## 📱 MPESA Integration
-
-### STK Push Flow
-1. User initiates payment with phone and amount
-2. System generates unique transaction reference
-3. MPESA STK Push sent to user's phone
-4. User enters PIN to authorize
-5. MPESA sends callback with transaction status
-6. System updates transaction and user records
-
-### Endpoints
+### MPESA Payments
 - `POST /api/v1/mpesa/stk-push` - Initiate payment
-- `POST /api/v1/mpesa/callback` - Handle MPESA callbacks
-- `POST /api/v1/mpesa/b2c` - Send money to users (admin only)
+- `POST /api/v1/mpesa/callback` - Handle callbacks (webhook)
+- `POST /api/v1/mpesa/b2c` - Send money to user (Admin only)
 - `GET /api/v1/mpesa/transaction-status/:id` - Check status
 
-## ₿ Blockchain Operations
-
-### Wallet Management
-- Ethereum wallet generation using Web3
-- Private key encryption with AES-256
-- Balance checking for ETH and ERC20 tokens
-- Transaction signing and broadcasting
-- Gas optimization
-
-### Crypto Operations
-- `POST /api/v1/wallet/create` - Generate new wallet
-- `GET /api/v1/wallet/balance` - Check balance
+### Wallet Operations
+- `POST /api/v1/wallet/create` - Generate blockchain wallet
+- `GET /api/v1/wallet/balance` - Get crypto balance
 - `POST /api/v1/wallet/transfer` - Send crypto
 - `POST /api/v1/wallet/swap-mpesa` - Convert MPESA to crypto
 
-## 🚦 API Endpoints
-
-### Authentication
-```http
-POST /api/v1/auth/register
-POST /api/v1/auth/login
-POST /api/v1/auth/refresh-token
-POST /api/v1/auth/logout
-POST /api/v1/auth/verify-phone
-```
-
 ### User Management
-```http
-GET /api/v1/users/profile
-PUT /api/v1/users/profile
-GET /api/v1/users/transactions
-```
+- `GET /api/v1/users/profile` - Get user profile
+- `PUT /api/v1/users/profile` - Update profile
+- `GET /api/v1/users/transactions` - Transaction history
 
-### Rate Limits
-- General: 100 requests/15min
-- Auth: 5 requests/15min
-- MPESA: 3 requests/1min
-- Wallet: 10 requests/30sec
-- Sensitive: 5 requests/1hour
+## 🔒 Security Features
 
-## 🐳 Docker Deployment
+- **Password Requirements**: 8+ chars, uppercase, lowercase, number, symbol
+- **Rate Limiting**: 5 login attempts per 15min per IP
+- **JWT Tokens**: 15min access, 7day refresh with rotation
+- **Input Validation**: All endpoints sanitized and validated
+- **CORS**: Configured for production domains
+- **Helmet.js**: Security headers enabled
+- **Private Key Encryption**: AES-256 encryption for wallet keys
 
-### Development
-```yaml
-version: '3.8'
-services:
-  app: node.js application
-  mongodb: database
-  redis: session store
-```
+## 🗄 Database Schemas
 
-### Production
-- Multi-stage builds
-- Health checks
-- Volume persistence
-- Environment-specific configs
+### User
+- email (unique), phone (unique), password (hashed)
+- mpesaCode, walletAddress, role[user,admin]
+- isVerified, refreshTokens[]
+
+### Transaction
+- userId, type[mpesa_deposit, crypto_transfer, swap_mpesa_crypto]
+- amount, currency[KES, ETH, USDT], status[pending,completed,failed]
+- reference, mpesaReference, blockchainHash
+
+### Wallet
+- userId, publicKey, privateKeyEncrypted
+- balance, currency[ETH, USDT], isActive
 
 ## 🧪 Testing
 
@@ -208,196 +148,142 @@ npm test
 npm run test:auth
 npm run test:mpesa
 npm run test:wallet
-
-# Test with coverage
-npm run test:coverage
+npm run test:contracts
 ```
 
-### Test Coverage
-- Authentication flows
-- MPESA integration
-- Blockchain operations
-- Error handling
-- Security validation
+## 🐳 Docker Deployment
 
-## 🔒 Security Implementation
-
-### Encryption Standards
-- bcrypt: 12 salt rounds
-- JWT: 256-bit secrets
-- AES-256-GCM for private keys
-- SHA-256 for data hashing
-
-### Protection Layers
-1. **Input Validation**: Express-validator on all endpoints
-2. **Rate Limiting**: Redis-based per-endpoint limits
-3. **XSS Prevention**: Input sanitization
-4. **SQL Injection**: Mongoose parameterization
-5. **Session Security**: JWT + Redis blacklisting
-6. **Headers Security**: Helmet.js configuration
-
-## 📊 Error Handling
-
-### Structured Responses
-```javascript
-{
-  status: 'success' | 'error',
-  message: 'Human readable message',
-  data: {}, // Optional success data
-  errors: [] // Optional validation errors
-}
+### Development
+```bash
+docker-compose up --build
 ```
 
-### HTTP Status Codes
-- 200: Success
-- 201: Created
-- 400: Validation error
-- 401: Unauthorized
-- 403: Forbidden
-- 404: Not found
-- 409: Conflict
-- 429: Rate limit exceeded
-- 500: Internal server error
+### Production
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
 
-## 🚨 Emergency Procedures
+### Service Management
+```bash
+# Start only databases
+docker-compose up mongodb redis
 
-### Database Connection Loss
-- Automatic retry with exponential backoff
-- Circuit breaker pattern
-- Graceful degradation
+# View logs
+docker-compose logs -f app
 
-### MPESA API Failure
-- Transaction status polling fallback
-- Manual reconciliation endpoints
-- Alert system for failed transactions
+# Stop services
+docker-compose down
+```
 
-### Blockchain Network Issues
-- Gas price optimization
-- Transaction queuing
-- Nonce management
+## 📊 Health Checks
 
-## 📈 Monitoring & Health Checks
-
-### Health Endpoint
-```http
+```bash
 GET /health
-```
+
 Response:
-```json
 {
   "status": "success",
   "message": "Server is running",
-  "timestamp": "2023-11-05T10:30:00.000Z",
+  "timestamp": "2024-01-15T10:30:00.000Z",
   "environment": "production"
 }
 ```
 
-### Logging
-- Structured JSON logging
-- Error tracking
-- Performance metrics
-- Audit trails for financial operations
+## 🔄 MPESA Integration Flow
 
-## 🔄 MPESA to Crypto Swap
+1. **STK Push Initiation**: User requests payment via `/stk-push`
+2. **Payment Prompt**: User receives MPESA prompt on phone
+3. **Callback Processing**: MPESA sends result to `/callback`
+4. **Status Update**: Transaction status updated in database
+5. **Wallet Credit**: Funds available for crypto swapping
 
-### Conversion Process
-1. User deposits KES via MPESA
-2. System verifies transaction completion
-3. Real-time exchange rate calculation
-4. Equivalent crypto amount credited to wallet
-5. Transaction recorded with audit trail
+## 💱 Crypto Operations
 
-### Exchange Rates
-- Dynamic rate calculation
-- Market-based pricing
-- Transparent fee structure
+### Wallet Creation
+- Generates new Ethereum wallet using Web3
+- Encrypts private key with AES-256
+- Stores public key in user profile
 
-## 🤝 API Integration Examples
+### Crypto Swapping
+- Converts MPESA KES to cryptocurrency
+- Uses real-time exchange rates
+- Executes via smart contract interactions
 
-### User Registration
-```javascript
-const response = await fetch('/api/v1/auth/register', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    email: 'user@example.com',
-    phone: '254712345678',
-    password: 'SecurePass123!',
-    confirmPassword: 'SecurePass123!'
-  })
-});
+### Token Transfers
+- Supports ETH and ERC20 token transfers
+- Gas optimization and price estimation
+- Transaction status tracking
+
+## 🏗 Architecture
+
+```
+Client → API Gateway → Authentication → Business Logic → Database
+                              ↓
+                      External Services
+                    (MPESA API, Blockchain)
 ```
 
-### MPESA Payment
-```javascript
-const response = await fetch('/api/v1/mpesa/stk-push', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer <access_token>'
-  },
-  body: JSON.stringify({
-    phone: '254712345678',
-    amount: 1000
-  })
-});
-```
+## 🚨 Error Handling
 
-## 🛡️ Compliance & Best Practices
+- Structured error responses with HTTP status codes
+- Database transaction rollbacks on failures
+- MPESA API failure fallbacks
+- Blockchain transaction error recovery
+- Graceful shutdown procedures
 
-### Data Protection
-- GDPR-compliant data handling
-- PII encryption at rest
-- Secure key management
-- Regular security audits
+## 📈 Monitoring
 
-### Financial Compliance
-- Transaction logging for audit
-- Anti-fraud measures
-- Suspicious activity monitoring
-- Regulatory reporting capabilities
+- Structured logging for all operations
+- Transaction status tracking
+- Error reporting and alerting
+- Performance metrics collection
 
-## 🚀 Production Deployment
-
-### Infrastructure Requirements
-- Load balancer configuration
-- Database replication
-- Redis clustering
-- Backup strategies
-- Disaster recovery
-
-### Performance Optimization
-- Database indexing
-- Query optimization
-- Caching strategies
-- Connection pooling
-
-## 🆘 Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues
-1. **MongoDB connection failures**: Check network and credentials
-2. **Redis timeouts**: Verify memory settings and connections
-3. **MPESA API errors**: Validate business shortcode and passkey
-4. **Blockchain transaction failures**: Check gas prices and nonce
 
-### Log Analysis
-- Application logs in JSON format
-- Database query performance
-- API response times
-- Error rate monitoring
+1. **MongoDB Connection Failed**
+   - Check if MongoDB service is running
+   - Verify connection string in .env
 
-## 📞 Support
+2. **Redis Connection Issues**
+   - Ensure Redis server is accessible
+   - Check REDIS_URL environment variable
 
-For technical support:
-1. Check application logs
-2. Verify environment configuration
-3. Review API documentation
-4. Contact me
+3. **MPESA API Errors**
+   - Validate consumer key/secret
+   - Check business shortcode configuration
+
+4. **Blockchain Transactions Failing**
+   - Verify Infura API key
+   - Check gas price and limits
+   - Confirm sufficient ETH for gas fees
+
+### Logs
+```bash
+# Application logs
+docker-compose logs app
+
+# Database logs
+docker-compose logs mongodb
+
+# Cache logs
+docker-compose logs redis
+```
 
 ## 📄 License
 
 MIT - All rights reserved.
 
+## 🆘 Support
+
+For technical support and issues:
+1. Check application logs
+2. Verify environment configuration
+3. Review API documentation
+4. Contact development team
+
 ---
 
-**Safarypto** - Building the future of secure financial authentication systems. **for educational purposes only**
+**Safarypto** - Bridging Mobile Money and Blockchain Technology
+```
